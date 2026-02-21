@@ -59,6 +59,10 @@ jobs:
         working-directory: spa
         run: npm install
 
+      - name: Run tests
+        working-directory: spa
+        run: npm run test:ci
+
       - name: Generate lock file and build SPA
         working-directory: spa
         run: npm run build:ci -- --base-href /${{ github.event.repository.name }}/

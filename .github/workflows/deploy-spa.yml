@@ -53,7 +53,8 @@ jobs:
             --output ./spa \
             --skip-check \
             --no-build \
-            --pyodide-version ${{ env.PYODIDE_VERSION }}
+            --pyodide-version ${{ env.PYODIDE_VERSION }} \
+            --examples-dir ./examples:./cauldron-go/examples
 
       - name: Install SPA dependencies
         working-directory: spa

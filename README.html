@@ -109,19 +109,31 @@
 </head>
 <body>
 <h1 id="pca-analysis">PCA Analysis</h1>
+<h2 id="installation">Installation</h2>
+<p><a href="cauldron://install?repo=https%3A%2F%2Fgithub.com%2Fnoatgnu%2Fpca-analysis-plugin">⬇️ <strong>Click here to install in Cauldron</strong></a></p>
+<blockquote>
+<p><strong>Repository</strong>: <code>https://github.com/noatgnu/pca-analysis-plugin</code></p>
+</blockquote>
+<p><strong>Manual installation:</strong></p>
+<ol>
+<li>Open Cauldron</li>
+<li>Go to <strong>Plugins</strong> → <strong>Install from Repository</strong></li>
+<li>Paste: <code>https://github.com/noatgnu/pca-analysis-plugin</code></li>
+<li>Click <strong>Install</strong></li>
+</ol>
 <p><strong>ID</strong>: <code>pca-analysis</code><br>
-<strong>Version</strong>: 1.0.0<br>
+<strong>Version</strong>: 1.1.0<br>
 <strong>Category</strong>: analysis<br>
 <strong>Author</strong>: CauldronGO Team</p>
 <h2 id="description">Description</h2>
-<p>Principal Component Analysis for dimensionality reduction and visualization</p>
+<p>Principal Component Analysis for dimensionality reduction and visualization with optional clustering</p>
 <h2 id="runtime">Runtime</h2>
 <ul>
 <li>
 <p><strong>Environments</strong>: <code>python</code></p>
 </li>
 <li>
-<p><strong>Script</strong>: <code>pca.py</code></p>
+<p><strong>Entrypoint</strong>: <code>pca.py</code></p>
 </li>
 </ul>
 <h2 id="inputs">Inputs</h2>
@@ -149,14 +161,6 @@
 <td><code>annotation_file</code></td>
 <td>Sample Annotation File</td>
 <td>file</td>
-<td>No</td>
-<td>-</td>
-<td>Always visible</td>
-</tr>
-<tr>
-<td><code>columns_name</code></td>
-<td>Sample Columns</td>
-<td>column-selector (multiple)</td>
 <td>Yes</td>
 <td>-</td>
 <td>Always visible</td>
@@ -177,22 +181,80 @@
 <td>false</td>
 <td>Always visible</td>
 </tr>
+<tr>
+<td><code>cluster_method</code></td>
+<td>Clustering Method</td>
+<td>select (none, kmeans, dbscan)</td>
+<td>No</td>
+<td>none</td>
+<td>Always visible</td>
+</tr>
+<tr>
+<td><code>auto_k</code></td>
+<td>Auto-detect Cluster Count</td>
+<td>boolean</td>
+<td>No</td>
+<td>false</td>
+<td>Visible when <code>cluster_method</code> = <code>kmeans</code></td>
+</tr>
+<tr>
+<td><code>n_clusters</code></td>
+<td>Number of Clusters</td>
+<td>number (min: 2, max: 20, step: 1)</td>
+<td>No</td>
+<td>5</td>
+<td>Visible when <code>cluster_method</code> = <code>kmeans</code></td>
+</tr>
+<tr>
+<td><code>max_k</code></td>
+<td>Max Clusters to Test</td>
+<td>number (min: 3, max: 30, step: 1)</td>
+<td>No</td>
+<td>10</td>
+<td>Visible when <code>auto_k</code> = <code>true</code></td>
+</tr>
+<tr>
+<td><code>dbscan_eps</code></td>
+<td>DBSCAN Epsilon</td>
+<td>number (min: 0, max: 10, step: 0)</td>
+<td>No</td>
+<td>0.5</td>
+<td>Visible when <code>cluster_method</code> = <code>dbscan</code></td>
+</tr>
+<tr>
+<td><code>dbscan_min_samples</code></td>
+<td>DBSCAN Min Samples</td>
+<td>number (min: 2, max: 50, step: 1)</td>
+<td>No</td>
+<td>5</td>
+<td>Visible when <code>cluster_method</code> = <code>dbscan</code></td>
+</tr>
 </tbody>
 </table>
 <h3 id="input-details">Input Details</h3>
 <h4 id="input-file-input-file">Input File (<code>input_file</code>)</h4>
 <p>Data matrix file containing samples and measurements</p>
 <h4 id="sample-annotation-file-annotation-file">Sample Annotation File (<code>annotation_file</code>)</h4>
-<p>Optional annotation file for sample grouping and coloring (Sample, Condition, Batch, Color)</p>
-<h4 id="sample-columns-columns-name">Sample Columns (<code>columns_name</code>)</h4>
-<p>Select columns containing sample data for PCA analysis</p>
-<ul>
-<li><strong>Column Source</strong>: <code>input_file</code></li>
-</ul>
+<p>Annotation file with Sample column specifying which columns to analyze, plus Condition/Batch for grouping</p>
 <h4 id="number-of-components-n-components">Number of Components (<code>n_components</code>)</h4>
 <p>Number of principal components to compute</p>
 <h4 id="apply-log2-transform-log2">Apply Log2 Transform (<code>log2</code>)</h4>
 <p>Apply log2 transformation to the data before PCA</p>
+<h4 id="clustering-method-cluster-method">Clustering Method (<code>cluster_method</code>)</h4>
+<p>Method to detect clusters from PCA embeddings</p>
+<ul>
+<li><strong>Options</strong>: <code>none</code>, <code>kmeans</code>, <code>dbscan</code></li>
+</ul>
+<h4 id="auto-detect-cluster-count-auto-k">Auto-detect Cluster Count (<code>auto_k</code>)</h4>
+<p>Automatically determine optimal number of clusters using elbow method</p>
+<h4 id="number-of-clusters-n-clusters">Number of Clusters (<code>n_clusters</code>)</h4>
+<p>Number of clusters for KMeans clustering (ignored if auto-detect is enabled)</p>
+<h4 id="max-clusters-to-test-max-k">Max Clusters to Test (<code>max_k</code>)</h4>
+<p>Maximum number of clusters to test for elbow method</p>
+<h4 id="dbscan-epsilon-dbscan-eps">DBSCAN Epsilon (<code>dbscan_eps</code>)</h4>
+<p>Maximum distance between samples for DBSCAN neighborhood</p>
+<h4 id="dbscan-min-samples-dbscan-min-samples">DBSCAN Min Samples (<code>dbscan_min_samples</code>)</h4>
+<p>Minimum number of samples in a neighborhood for DBSCAN core points</p>
 <h2 id="outputs">Outputs</h2>
 <table>
 <thead>
@@ -210,7 +272,7 @@
 <td><code>pca_output.txt</code></td>
 <td>data</td>
 <td>tsv</td>
-<td>PCA coordinates for each sample</td>
+<td>PCA coordinates for each sample with optional cluster assignments</td>
 </tr>
 <tr>
 <td><code>explained_variance</code></td>
@@ -219,20 +281,40 @@
 <td>json</td>
 <td>Variance explained by each principal component</td>
 </tr>
+<tr>
+<td><code>pca_3d</code></td>
+<td><code>pca_3d.html</code></td>
+<td>html</td>
+<td>html</td>
+<td>Interactive 3D PCA visualization (generated when n_components &gt;= 3)</td>
+</tr>
+<tr>
+<td><code>elbow_plot</code></td>
+<td><code>elbow_plot.html</code></td>
+<td>html</td>
+<td>html</td>
+<td>Elbow plot for optimal cluster count (generated when auto_k is enabled)</td>
+</tr>
 </tbody>
 </table>
 <h2 id="sample-annotation">Sample Annotation</h2>
 <p>This plugin supports sample annotation:</p>
 <ul>
-<li><strong>Samples From</strong>: <code>columns_name</code></li>
 <li><strong>Annotation File</strong>: <code>annotation_file</code></li>
 </ul>
 <h2 id="visualizations">Visualizations</h2>
-<p>This plugin generates 1 plot(s):</p>
-<h3 id="pca-scatter-plot-pca-scatter">PCA Scatter Plot (<code>pca-scatter</code>)</h3>
+<p>This plugin generates 2 plot(s):</p>
+<h3 id="pca-plot-by-condition-pca-scatter-condition">PCA Plot (by Condition) (<code>pca-scatter-condition</code>)</h3>
 <ul>
 <li><strong>Type</strong>: scatter</li>
-<li><strong>Component</strong>: <code>PcaPlot</code></li>
+<li><strong>Data Source</strong>: <code>pca_output</code></li>
+<li><strong>Default</strong>: Yes</li>
+<li><strong>Customization Options</strong>: 9 available</li>
+</ul>
+<h3 id="pca-plot-by-cluster-pca-scatter-cluster">PCA Plot (by Cluster) (<code>pca-scatter-cluster</code>)</h3>
+<p>PCA scatter plot colored by detected clusters</p>
+<ul>
+<li><strong>Type</strong>: scatter</li>
 <li><strong>Data Source</strong>: <code>pca_output</code></li>
 <li><strong>Customization Options</strong>: 9 available</li>
 </ul>
@@ -246,17 +328,20 @@
 <li><code>numpy&gt;=1.24.0</code></li>
 <li><code>pandas&gt;=2.0.0</code></li>
 <li><code>scikit-learn&gt;=1.3.0</code></li>
+<li><code>plotly&gt;=5.18.0</code></li>
 </ul>
 <blockquote>
 <p><strong>Note</strong>: When you create a custom environment for this plugin, these dependencies will be automatically installed.</p>
 </blockquote>
 <h2 id="example-data">Example Data</h2>
 <p>This plugin includes example data for testing:</p>
-<pre><code class="language-yaml">  input_file: diann/imputed.data.txt
-  columns_name_source: diann/imputed.data.txt
-  columns_name: [C:\Raja\DIA-NN searches\June 2022\LT-CBQCA-Test_DIA\RN-DS_220106_BCA_LT-IP_01.raw C:\Raja\DIA-NN searches\June 2022\LT-CBQCA-Test_DIA\RN-DS_220106_BCA_LT-IP_02.raw C:\Raja\DIA-NN searches\June 2022\LT-CBQCA-Test_DIA\RN-DS_220106_BCA_LT-IP_03.raw C:\Raja\DIA-NN searches\June 2022\LT-CBQCA-Test_DIA\RN-DS_220106_BCA_LT-MockIP_01.raw C:\Raja\DIA-NN searches\June 2022\LT-CBQCA-Test_DIA\RN-DS_220106_BCA_LT-MockIP_02.raw C:\Raja\DIA-NN searches\June 2022\LT-CBQCA-Test_DIA\RN-DS_220106_BCA_LT-MockIP_03.raw]
-  n_components: 2
+<pre><code class="language-yaml">  input_file: examples/diann/imputed.data.txt
+  annotation_file: examples/diann/annotation.txt
+  n_components: 3
   log2: true
+  cluster_method: kmeans
+  auto_k: true
+  max_k: 6
 </code></pre>
 <p>Load example data by clicking the <strong>Load Example</strong> button in the UI.</p>
 <h2 id="usage">Usage</h2>

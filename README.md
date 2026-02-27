@@ -1,29 +1,48 @@
 # PCA Analysis
 
+
+## Installation
+
+**[⬇️ Click here to install in Cauldron](http://localhost:50060/install?repo=https%3A%2F%2Fgithub.com%2Fnoatgnu%2Fpca-analysis-plugin)** _(requires Cauldron to be running)_
+
+> **Repository**: `https://github.com/noatgnu/pca-analysis-plugin`
+
+**Manual installation:**
+
+1. Open Cauldron
+2. Go to **Plugins** → **Install from Repository**
+3. Paste: `https://github.com/noatgnu/pca-analysis-plugin`
+4. Click **Install**
+
 **ID**: `pca-analysis`  
-**Version**: 1.0.0  
+**Version**: 1.1.0  
 **Category**: analysis  
 **Author**: CauldronGO Team
 
 ## Description
 
-Principal Component Analysis for dimensionality reduction and visualization
+Principal Component Analysis for dimensionality reduction and visualization with optional clustering
 
 ## Runtime
 
 - **Environments**: `python`
 
-- **Script**: `pca.py`
+- **Entrypoint**: `pca.py`
 
 ## Inputs
 
 | Name | Label | Type | Required | Default | Visibility |
 |------|-------|------|----------|---------|------------|
 | `input_file` | Input File | file | Yes | - | Always visible |
-| `annotation_file` | Sample Annotation File | file | No | - | Always visible |
-| `columns_name` | Sample Columns | column-selector (multiple) | Yes | - | Always visible |
+| `annotation_file` | Sample Annotation File | file | Yes | - | Always visible |
 | `n_components` | Number of Components | number (min: 2, max: 10, step: 1) | Yes | 2 | Always visible |
 | `log2` | Apply Log2 Transform | boolean | No | false | Always visible |
+| `cluster_method` | Clustering Method | select (none, kmeans, dbscan) | No | none | Always visible |
+| `auto_k` | Auto-detect Cluster Count | boolean | No | false | Visible when `cluster_method` = `kmeans` |
+| `n_clusters` | Number of Clusters | number (min: 2, max: 20, step: 1) | No | 5 | Visible when `cluster_method` = `kmeans` |
+| `max_k` | Max Clusters to Test | number (min: 3, max: 30, step: 1) | No | 10 | Visible when `auto_k` = `true` |
+| `dbscan_eps` | DBSCAN Epsilon | number (min: 0, max: 10, step: 0) | No | 0.5 | Visible when `cluster_method` = `dbscan` |
+| `dbscan_min_samples` | DBSCAN Min Samples | number (min: 2, max: 50, step: 1) | No | 5 | Visible when `cluster_method` = `dbscan` |
 
 ### Input Details
 
@@ -34,14 +53,8 @@ Data matrix file containing samples and measurements
 
 #### Sample Annotation File (`annotation_file`)
 
-Optional annotation file for sample grouping and coloring (Sample, Condition, Batch, Color)
+Annotation file with Sample column specifying which columns to analyze, plus Condition/Batch for grouping
 
-
-#### Sample Columns (`columns_name`)
-
-Select columns containing sample data for PCA analysis
-
-- **Column Source**: `input_file`
 
 #### Number of Components (`n_components`)
 
@@ -53,28 +66,68 @@ Number of principal components to compute
 Apply log2 transformation to the data before PCA
 
 
+#### Clustering Method (`cluster_method`)
+
+Method to detect clusters from PCA embeddings
+
+- **Options**: `none`, `kmeans`, `dbscan`
+
+#### Auto-detect Cluster Count (`auto_k`)
+
+Automatically determine optimal number of clusters using elbow method
+
+
+#### Number of Clusters (`n_clusters`)
+
+Number of clusters for KMeans clustering (ignored if auto-detect is enabled)
+
+
+#### Max Clusters to Test (`max_k`)
+
+Maximum number of clusters to test for elbow method
+
+
+#### DBSCAN Epsilon (`dbscan_eps`)
+
+Maximum distance between samples for DBSCAN neighborhood
+
+
+#### DBSCAN Min Samples (`dbscan_min_samples`)
+
+Minimum number of samples in a neighborhood for DBSCAN core points
+
+
 ## Outputs
 
 | Name | File | Type | Format | Description |
 |------|------|------|--------|-------------|
-| `pca_output` | `pca_output.txt` | data | tsv | PCA coordinates for each sample |
+| `pca_output` | `pca_output.txt` | data | tsv | PCA coordinates for each sample with optional cluster assignments |
 | `explained_variance` | `explained_variance_ratio.json` | data | json | Variance explained by each principal component |
+| `pca_3d` | `pca_3d.html` | html | html | Interactive 3D PCA visualization (generated when n_components >= 3) |
+| `elbow_plot` | `elbow_plot.html` | html | html | Elbow plot for optimal cluster count (generated when auto_k is enabled) |
 
 ## Sample Annotation
 
 This plugin supports sample annotation:
 
-- **Samples From**: `columns_name`
 - **Annotation File**: `annotation_file`
 
 ## Visualizations
 
-This plugin generates 1 plot(s):
+This plugin generates 2 plot(s):
 
-### PCA Scatter Plot (`pca-scatter`)
+### PCA Plot (by Condition) (`pca-scatter-condition`)
 
 - **Type**: scatter
-- **Component**: `PcaPlot`
+- **Data Source**: `pca_output`
+- **Default**: Yes
+- **Customization Options**: 9 available
+
+### PCA Plot (by Cluster) (`pca-scatter-cluster`)
+
+PCA scatter plot colored by detected clusters
+
+- **Type**: scatter
 - **Data Source**: `pca_output`
 - **Customization Options**: 9 available
 
@@ -89,6 +142,7 @@ Packages are defined inline in the plugin configuration:
 - `numpy>=1.24.0`
 - `pandas>=2.0.0`
 - `scikit-learn>=1.3.0`
+- `plotly>=5.18.0`
 
 > **Note**: When you create a custom environment for this plugin, these dependencies will be automatically installed.
 
@@ -97,11 +151,13 @@ Packages are defined inline in the plugin configuration:
 This plugin includes example data for testing:
 
 ```yaml
-  columns_name: [C:\Raja\DIA-NN searches\June 2022\LT-CBQCA-Test_DIA\RN-DS_220106_BCA_LT-IP_01.raw C:\Raja\DIA-NN searches\June 2022\LT-CBQCA-Test_DIA\RN-DS_220106_BCA_LT-IP_02.raw C:\Raja\DIA-NN searches\June 2022\LT-CBQCA-Test_DIA\RN-DS_220106_BCA_LT-IP_03.raw C:\Raja\DIA-NN searches\June 2022\LT-CBQCA-Test_DIA\RN-DS_220106_BCA_LT-MockIP_01.raw C:\Raja\DIA-NN searches\June 2022\LT-CBQCA-Test_DIA\RN-DS_220106_BCA_LT-MockIP_02.raw C:\Raja\DIA-NN searches\June 2022\LT-CBQCA-Test_DIA\RN-DS_220106_BCA_LT-MockIP_03.raw]
-  n_components: 2
+  cluster_method: kmeans
+  auto_k: true
+  max_k: 6
+  input_file: examples/diann/imputed.data.txt
+  annotation_file: examples/diann/annotation.txt
+  n_components: 3
   log2: true
-  input_file: diann/imputed.data.txt
-  columns_name_source: diann/imputed.data.txt
 ```
 
 Load example data by clicking the **Load Example** button in the UI.
